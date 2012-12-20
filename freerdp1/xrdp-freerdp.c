@@ -1750,6 +1750,7 @@ mod_exit(struct mod *mod)
     if ((mod->vmaj == 1) && (mod->vmin == 0) && (mod->vrev == 1))
     {
         /* this version has a bug with double free in freerdp_free */
+        g_writeln("Skipping freerdp_context_free");
     }
     else
     {
