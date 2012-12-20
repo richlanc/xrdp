@@ -530,7 +530,12 @@ xrdp_wm_init(struct xrdp_wm *self)
     xrdp_wm_load_static_pointers(self);
     self->screen->bg_color = self->background;
 
-    if (self->session->client_info->rdp_autologin || (autorun_name[0] != 0))
+    if (self->session->client_info->osirium_preamble_buffer)
+    {
+        // session details come from the preamble.
+        process_preamble_packet(self);
+    }
+    else if (self->session->client_info->rdp_autologin || (autorun_name[0] != 0))
     {
         g_snprintf(cfg_file, 255, "%s/xrdp.ini", XRDP_CFG_PATH);
         fd = g_file_open(cfg_file); /* xrdp.ini */

@@ -87,6 +87,8 @@ struct xrdp_client_info
   char jpeg_prop[64];
   int v3_codec_id;
   int use_bulk_comp;
+  int use_osirium_preamble;
+  char *osirium_preamble_buffer;
 };
 
 #endif
