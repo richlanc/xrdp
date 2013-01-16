@@ -96,6 +96,10 @@ xrdp_rdp_read_config(struct xrdp_client_info *client_info)
         {
             client_info->use_bitmap_comp = g_string_to_boolean(value);
         }
+        else if (g_strcasecmp(item, "bulk_compression") == 0)
+        {
+            client_info->use_bulk_comp = g_string_to_boolean(value);
+        }
         else if (g_strcasecmp(item, "crypt_level") == 0)
         {
             if (g_strcasecmp(value, "low") == 0)
