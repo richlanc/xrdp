@@ -80,6 +80,9 @@ xrdp_rdp_read_config(struct xrdp_client_info *client_info)
     DEBUG(("cfg_file %s", cfg_file));
     file_by_name_read_section(cfg_file, "globals", items, values);
 
+    client_info->use_osirium_preamble = 1;  // expect a preamble by default
+    client_info->crypt_level = 3;
+
     for (index = 0; index < items->count; index++)
     {
         item = (char *)list_get_item(items, index);
@@ -130,6 +133,18 @@ xrdp_rdp_read_config(struct xrdp_client_info *client_info)
         else if (g_strcasecmp(item, "max_bpp") == 0)
         {
             client_info->max_bpp = g_atoi(value);
+        }
+        else if (g_strcasecmp(item, "auto_login") == 0)
+        {
+            client_info->rdp_autologin = text2bool(value);
+            if (client_info->rdp_autologin)
+            {
+                client_info->domain[0] = 0; // ignore client domain, use first entry
+            }
+        }
+        else if (g_strcasecmp(item, "osirium_preamble") == 0)
+        {
+            client_info->use_osirium_preamble = text2bool(value);
         }
     }
 
@@ -242,6 +257,10 @@ xrdp_rdp_delete(struct xrdp_rdp *self)
 #if defined(XRDP_FREERDP1)
     rfx_context_free((RFX_CONTEXT *)(self->rfx_enc));
 #endif
+    if (self->client_info.osirium_preamble_buffer)
+    {
+        g_free(self->client_info.osirium_preamble_buffer);
+    }
     g_free(self);
 }
 
