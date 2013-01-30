@@ -758,17 +758,19 @@ lfreerdp_glyph_index(rdpContext *context, GLYPH_INDEX_ORDER *glyph_index)
     int bgcolor;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_glyph_index: %i", glyph_index->cbData));
+    LLOGLN(10, ("lfreerdp_glyph_index:"));
     server_bpp = mod->inst->settings->ColorDepth;
     client_bpp = mod->bpp;
     fgcolor = convert_color(server_bpp, client_bpp,
                             glyph_index->foreColor, mod->colormap);
     bgcolor = convert_color(server_bpp, client_bpp,
                             glyph_index->backColor, mod->colormap);
-    LLOGLN(10, ("lfreerdp_glyph_index: color %i:%i", fgcolor, bgcolor));
     mod->server_set_bgcolor(mod, fgcolor);
     mod->server_set_fgcolor(mod, bgcolor);
-    LLOGLN(10, ("lfreerdp_glyph_index: text %*s", glyph_index->cbData, (char *)(glyph_index->data)));
+    LLOGLN(10, ("lfreerdp_glyph_index: color %i:%i", fgcolor, bgcolor));
+#ifdef DEBUG_FREERDP1
+    g_hexdump((char *)(glyph_index->data), glyph_index->cbData);
+#endif
     mod->server_draw_text(mod, glyph_index->cacheId, glyph_index->flAccel,
                           glyph_index->fOpRedundant,
                           glyph_index->bkLeft, glyph_index->bkTop,
