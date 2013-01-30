@@ -24,7 +24,7 @@
 #include "xrdp_rail.h"
 #include "log.h"
 
-#ifdef XRDP_DEBUG
+#ifdef DEBUG_FREERDP1
 #define LOG_LEVEL 99
 #else
 #define LOG_LEVEL 0
