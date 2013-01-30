@@ -31,6 +31,10 @@ AC_ARG_ENABLE(xrdpdebug, AS_HELP_STRING([--enable-xrdpdebug],
               [Build debug (default: no)]),
               [xrdpdebug=true], [xrdpdebug=false])
 AM_CONDITIONAL(XRDP_DEBUG, [test x$xrdpdebug = xtrue])
+AC_ARG_ENABLE(freerdp1debug, AS_HELP_STRING([--enable-freerdp1debug],
+              [Build debug (default: no)]),
+              [freerdp1debug=true], [freerdp1debug=false])
+AM_CONDITIONAL(XRDP_DEBUG_FREERDP1, [test x$freerdp1debug = xtrue])
 AC_ARG_ENABLE(freerdp1, AS_HELP_STRING([--enable-freerdp1],
               [Build freerdp1 module (default: no)]),
               [freerdp1=true], [freerdp1=false])
