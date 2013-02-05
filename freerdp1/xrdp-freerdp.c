@@ -22,7 +22,7 @@
 #include "xrdp_rail.h"
 
 #ifdef DEBUG_FREERDP1
-#define LOG_LEVEL 99
+#define LOG_LEVEL 11
 #else
 #define LOG_LEVEL 0
 #endif
@@ -513,7 +513,6 @@ lfreerdp_set_bounds(rdpContext *context, rdpBounds *bounds)
     int cx;
     int cy;
 
-    LLOGLN(10, ("lfreerdp_set_bounds: %p", bounds));
     mod = ((struct mod_context *)context)->modi;
 
     if (bounds != 0)
@@ -522,10 +521,12 @@ lfreerdp_set_bounds(rdpContext *context, rdpBounds *bounds)
         y = bounds->top;
         cx = (bounds->right - bounds->left) + 1;
         cy = (bounds->bottom - bounds->top) + 1;
+        LLOGLN(0, ("lfreerdp_set_bounds: LT:%i,%i WH:%i,%i", bounds->left, bounds->top, cx, cy));
         mod->server_set_clip(mod, x, y, cx, cy);
     }
     else
     {
+        LLOGLN(1, ("lfreerdp_set_bounds: reset"));
         mod->server_reset_clip(mod);
     }
 }
@@ -604,7 +605,9 @@ lfreerdp_dst_blt(rdpContext *context, DSTBLT_ORDER *dstblt)
     struct mod *mod;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_dst_blt:"));
+    LLOGLN(10, ("lfreerdp_dst_blt: %x LT:%i,%i WH:%i,%i", dstblt->bRop, 
+                            dstblt->nLeftRect, dstblt->nTopRect,
+                            dstblt->nWidth, dstblt->nHeight));
     mod->server_set_opcode(mod, dstblt->bRop);
     mod->server_fill_rect(mod, dstblt->nLeftRect, dstblt->nTopRect,
                           dstblt->nWidth, dstblt->nHeight);
@@ -624,16 +627,18 @@ lfreerdp_pat_blt(rdpContext *context, PATBLT_ORDER *patblt)
     struct brush_item *bi;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_pat_blt:"));
+    LLOGLN(10, ("lfreerdp_pat_blt: %x LT:%i,%i WH:%i,%i", patblt->bRop, 
+                            patblt->nLeftRect, patblt->nTopRect,
+                            patblt->nWidth, patblt->nHeight));
 
     server_bpp = mod->inst->settings->ColorDepth;
     client_bpp = mod->bpp;
-    LLOGLN(0, ("lfreerdp_pat_blt: bpp %d %d", server_bpp, client_bpp));
 
     fgcolor = convert_color(server_bpp, client_bpp,
                             patblt->foreColor, mod->colormap);
     bgcolor = convert_color(server_bpp, client_bpp,
                             patblt->backColor, mod->colormap);
+    LLOGLN(10, ("lfreerdp_pat_blt: Colours:%i,%i", bgcolor, fgcolor));
 
     mod->server_set_mixmode(mod, 1);
     mod->server_set_opcode(mod, patblt->bRop);
@@ -675,7 +680,10 @@ lfreerdp_scr_blt(rdpContext *context, SCRBLT_ORDER *scrblt)
     struct mod *mod;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_scr_blt:"));
+    LLOGLN(10, ("lfreerdp_scr_blt: %x LT:%i,%i WH:%i,%i XY:%i,%i", scrblt->bRop, 
+                            scrblt->nLeftRect, scrblt->nTopRect,
+                            scrblt->nWidth, scrblt->nHeight,
+                            scrblt->nXSrc, scrblt->nYSrc));
     mod->server_set_opcode(mod, scrblt->bRop);
     mod->server_screen_blt(mod, scrblt->nLeftRect, scrblt->nTopRect,
                            scrblt->nWidth, scrblt->nHeight,
@@ -693,12 +701,14 @@ lfreerdp_opaque_rect(rdpContext *context, OPAQUE_RECT_ORDER *opaque_rect)
     int fgcolor;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_opaque_rect:"));
     server_bpp = mod->inst->settings->ColorDepth;
     client_bpp = mod->bpp;
     fgcolor = convert_color(server_bpp, client_bpp,
                             opaque_rect->color, mod->colormap);
     mod->server_set_fgcolor(mod, fgcolor);
+    LLOGLN(10, ("lfreerdp_opaque_rect: Colour %i LT%i,%i WH:%i,%i", fgcolor, 
+                        opaque_rect->nLeftRect, opaque_rect->nTopRect,
+                        opaque_rect->nWidth, opaque_rect->nHeight));
     mod->server_fill_rect(mod, opaque_rect->nLeftRect, opaque_rect->nTopRect,
                           opaque_rect->nWidth, opaque_rect->nHeight);
 }
@@ -713,8 +723,10 @@ lfreerdp_mem_blt(rdpContext *context, MEMBLT_ORDER *memblt)
     struct bitmap_item *bi;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_mem_blt: cacheId %d cacheIndex %d",
-                memblt->cacheId, memblt->cacheIndex));
+    LLOGLN(10, ("lfreerdp_mem_blt: cacheId %d cacheIndex %d LT%i,%i WH:%i,%i",
+                memblt->cacheId, memblt->cacheIndex,
+                memblt->nLeftRect, memblt->nTopRect,
+                memblt->nWidth, memblt->nHeight));
 
     id = memblt->cacheId;
     idx = memblt->cacheIndex;
@@ -767,7 +779,7 @@ lfreerdp_glyph_index(rdpContext *context, GLYPH_INDEX_ORDER *glyph_index)
                             glyph_index->backColor, mod->colormap);
     mod->server_set_bgcolor(mod, fgcolor);
     mod->server_set_fgcolor(mod, bgcolor);
-    LLOGLN(10, ("lfreerdp_glyph_index: color %i:%i", fgcolor, bgcolor));
+    LLOGLN(10, ("lfreerdp_glyph_index: color %i:%i", bgcolor, fgcolor));
 #ifdef DEBUG_FREERDP1
     g_hexdump((char *)(glyph_index->data), glyph_index->cbData);
 #endif
@@ -1250,10 +1262,13 @@ lfreerdp_pre_connect(freerdp *instance)
 
     // TODO
     //instance->settings->glyph_cache = true;
-    instance->settings->GlyphSupportLevel = GLYPH_SUPPORT_FULL;
-    instance->settings->OrderSupport[NEG_GLYPH_INDEX_INDEX] = TRUE;
+//    instance->settings->GlyphSupportLevel = GLYPH_SUPPORT_FULL;
+    instance->settings->GlyphSupportLevel = GLYPH_SUPPORT_NONE;
+//    instance->settings->OrderSupport[NEG_GLYPH_INDEX_INDEX] = TRUE;
+    instance->settings->OrderSupport[NEG_GLYPH_INDEX_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_FAST_GLYPH_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_FAST_INDEX_INDEX] = FALSE;
+    instance->settings->OrderSupport[NEG_SCRBLT_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_SCRBLT_INDEX] = TRUE;
     instance->settings->OrderSupport[NEG_SAVEBITMAP_INDEX] = FALSE;
 
