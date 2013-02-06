@@ -136,7 +136,7 @@ xrdp_rdp_read_config(struct xrdp_client_info *client_info)
         }
         else if (g_strcasecmp(item, "auto_login") == 0)
         {
-            client_info->rdp_autologin = g_string_to_boolean(value);
+            client_info->rdp_autologin = text2bool(value);
             if (client_info->rdp_autologin)
             {
                 client_info->domain[0] = 0; // ignore client domain, use first entry
@@ -144,7 +144,7 @@ xrdp_rdp_read_config(struct xrdp_client_info *client_info)
         }
         else if (g_strcasecmp(item, "osirium_preamble") == 0)
         {
-            client_info->use_osirium_preamble = g_string_to_boolean(value);
+            client_info->use_osirium_preamble = text2bool(value);
         }
     }
 
