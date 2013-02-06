@@ -1158,6 +1158,10 @@ xrdp_rdp_process_confirm_active(struct xrdp_rdp *self, struct stream *s)
         in_uint16_le(s, type);
         in_uint16_le(s, len);
 
+#ifdef XRDP_DEBUG
+        DEBUG(("RDP Capability %i", type));
+        g_hexdump(p, len);
+#endif
         switch (type)
         {
             case RDP_CAPSET_GENERAL: /* 1 */
