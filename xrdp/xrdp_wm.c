@@ -546,7 +546,7 @@ xrdp_wm_init(struct xrdp_wm *self)
             names->auto_free = 1;
             values = list_create();
             values->auto_free = 1;
-	    /* domain names that starts with '_' are reserved for IP/DNS to simplify 
+	    /* domain names that starts with '_' are reserved for IP/DNS to simplify
 	     * for the user in a gateway setup */
 	    if(self->session->client_info->domain[0]!='_')
 	    {
@@ -1710,8 +1710,10 @@ xrdp_wm_log_wnd_notify(struct xrdp_bitmap *wnd,
             if (wm->mm->mod_handle == 0)
             {
                 /* make sure autologin is off */
-                wm->session->client_info->rdp_autologin = 0;
-                xrdp_wm_set_login_mode(wm, 0); /* reset session */
+                // IMPORTANT:SE
+                libxrdp_disconnect(wm->session);
+                // wm->session->client_info->rdp_autologin = 0;
+                // xrdp_wm_set_login_mode(wm, 0); /* reset session */
             }
         }
     }

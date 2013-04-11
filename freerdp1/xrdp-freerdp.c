@@ -152,13 +152,13 @@ lxrdp_connect(struct mod *mod)
         }
 
 #endif
-        log_message(LOG_LEVEL_INFO,"freerdp_connect Failed to destination :%s:%d",mod->inst->settings->ServerHostname,mod->inst->settings->ServerPort);   
+        log_message(LOG_LEVEL_INFO,"freerdp_connect Failed to destination :%s:%d",mod->inst->settings->ServerHostname,mod->inst->settings->ServerPort);
         return 1;
     }
     else
     {
         log_message(LOG_LEVEL_INFO,"freerdp_connect returned Success to destination :%s:%d",mod->inst->settings->ServerHostname,mod->inst->settings->ServerPort);
-    }	
+    }
 
     return 0;
 }
@@ -1066,7 +1066,7 @@ static void DEFAULT_CC
 lfreerdp_pointer_system(rdpContext *context,
                         POINTER_SYSTEM_UPDATE *pointer_system)
 {
-    LLOGLN(0, ("lfreerdp_pointer_system: - no code here type value = %d",pointer_system->type));    
+    LLOGLN(0, ("lfreerdp_pointer_system: - no code here type value = %d",pointer_system->type));
 }
 
 /******************************************************************************/
@@ -1194,10 +1194,10 @@ lfreerdp_pointer_new(rdpContext *context,
         LLOGLN(0,("pointer index too big"));
         return ;
     }
-    // In this fix we remove the xorBpp check, even if 
+    // In this fix we remove the xorBpp check, even if
     // the mouse pointers are not correct we can use them.
     // Configure your destination not to use windows Aero as pointer scheme
-    else if ( // pointer_new->xorBpp == 1 && 
+    else if ( // pointer_new->xorBpp == 1 &&
             pointer_new->colorPtrAttr.width == 32 &&
             pointer_new->colorPtrAttr.height == 32 &&
             index < 32)
@@ -1256,7 +1256,7 @@ lfreerdp_pointer_cached(rdpContext *context,
 
 static void DEFAULT_CC lfreerdp_polygon_cb(rdpContext* context, POLYGON_CB_ORDER* polygon_cb)
 {
-    LLOGLN(0, ("lfreerdp_polygon_sc called:- not supported!!!!!!!!!!!!!!!!!!!!"));    
+    LLOGLN(0, ("lfreerdp_polygon_sc called:- not supported!!!!!!!!!!!!!!!!!!!!"));
 }
 
 static void DEFAULT_CC lfreerdp_polygon_sc(rdpContext* context, POLYGON_SC_ORDER* polygon_sc)
@@ -1265,13 +1265,13 @@ static void DEFAULT_CC lfreerdp_polygon_sc(rdpContext* context, POLYGON_SC_ORDER
     int i, npoints;
     XPoint points[4];
     int fgcolor;
-    int server_bpp, client_bpp;    
-    
+    int server_bpp, client_bpp;
+
     mod = ((struct mod_context *)context)->modi;
     LLOGLN(10, ("lfreerdp_polygon_sc :%d(points) %d(color) %d(fillmode) %d(bRop) %d(cbData) %d(x) %d(y)", polygon_sc->numPoints,polygon_sc->brushColor,polygon_sc->fillMode,polygon_sc->bRop2,polygon_sc->cbData,polygon_sc->xStart,polygon_sc->yStart));
     if(polygon_sc->numPoints==3)
     {
-        server_bpp = mod->inst->settings->ColorDepth;	
+        server_bpp = mod->inst->settings->ColorDepth;
         client_bpp = mod->bpp;
 
         points[0].x = polygon_sc->xStart;
@@ -1284,7 +1284,7 @@ static void DEFAULT_CC lfreerdp_polygon_sc(rdpContext* context, POLYGON_SC_ORDER
         }
         fgcolor = convert_color(server_bpp, client_bpp,
                             polygon_sc->brushColor, mod->colormap);
-   
+
         mod->server_set_opcode(mod, polygon_sc->bRop2);
         mod->server_set_bgcolor(mod, 255);
         mod->server_set_fgcolor(mod, fgcolor);
@@ -1300,14 +1300,56 @@ static void DEFAULT_CC lfreerdp_polygon_sc(rdpContext* context, POLYGON_SC_ORDER
     else
     {
         LLOGLN(0, ("Not handled number of points in lfreerdp_polygon_sc"));
-    }   
+    }
 }
 
 static void DEFAULT_CC lfreerdp_syncronize(rdpContext* context)
 {
     struct mod *mod;
-    mod = ((struct mod_context *)context)->modi;    
+    mod = ((struct mod_context *)context)->modi;
     LLOGLN(0, ("lfreerdp_synchronize received - not handled"));
+}
+
+int freerdp_parse_username(char* username, char** user, char** domain)
+{
+    char* p;
+    int length;
+
+    p = strchr(username, '\\');
+
+    if (p)
+    {
+        length = p - username;
+        *domain = (char*) malloc(length + 1);
+        strncpy(*domain, username, length);
+        (*domain)[length] = '\0';
+        *user = g_strdup(&p[1]);
+    }
+    else
+    {
+        *user = g_strdup(username);
+        *domain = NULL;
+
+        /*
+        p = strchr(username, '@');
+
+        if (p)
+        {
+            length = p - username;
+            *user = (char*) malloc(length + 1);
+            strncpy(*user, username, length);
+            (*user)[length] = '\0';
+            *domain = g_strdup(&p[1]);
+        }
+        else
+        {
+            *user = g_strdup(username);
+            *domain = NULL;
+        }
+        */
+    }
+
+    return 0;
 }
 
 /******************************************************************************/
@@ -1346,7 +1388,7 @@ lfreerdp_pre_connect(freerdp *instance)
 
     // TODO
     // instance->settings->offscreen_bitmap_cache = false;
-    instance->settings->OffscreenSupportLevel = 0;  
+    instance->settings->OffscreenSupportLevel = 0;
     instance->settings->DrawNineGridEnabled = 0 ;
 
     // TODO
@@ -1378,15 +1420,21 @@ lfreerdp_pre_connect(freerdp *instance)
     instance->settings->BitmapCacheV2CellInfo[4].numEntries = 0; // 2048;
     instance->settings->BitmapCacheV2CellInfo[4].persistent = FALSE;
 
-    // instance->settings->BitmapCacheV3Enabled = FALSE; 
+    // instance->settings->BitmapCacheV3Enabled = FALSE;
     instance->settings->OrderSupport[NEG_MULTIDSTBLT_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_MULTIPATBLT_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_MULTISCRBLT_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_MULTIOPAQUERECT_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_POLYLINE_INDEX] = FALSE;
 
-    instance->settings->Username = g_strdup(mod->username);
+    char* user;
+    char* domain;
+
+    freerdp_parse_username(mod->username, &user, &domain);
+
+    instance->settings->Username = user;
     instance->settings->Password = g_strdup(mod->password);
+    instance->settings->Domain = domain;
 
     if (mod->client_info.rail_support_level > 0)
     {
@@ -1402,8 +1450,8 @@ lfreerdp_pre_connect(freerdp *instance)
         instance->settings->PerformanceFlags = PERF_DISABLE_WALLPAPER | PERF_DISABLE_FULLWINDOWDRAG | PERF_DISABLE_MENUANIMATIONS | PERF_DISABLE_THEMING ; // | PERF_DISABLE_CURSOR_SHADOW | PERF_DISABLE_CURSORSETTINGS ;
     }
     instance->settings->CompressionEnabled = FALSE ;
-    instance->settings->IgnoreCertificate = TRUE ;    
-    
+    instance->settings->IgnoreCertificate = TRUE ;
+
     // here
     //instance->settings->RdpVersion = 4;
 
@@ -1601,7 +1649,7 @@ lrail_NotifyIconCreate(rdpContext *context, WINDOW_ORDER_INFO *orderInfo,
 
     if (orderInfo->fieldFlags & WINDOW_ORDER_FIELD_NOTIFY_TIP)
     {
-        freerdp_UnicodeToAsciiAlloc(notify_icon_state->toolTip.string, 
+        freerdp_UnicodeToAsciiAlloc(notify_icon_state->toolTip.string,
                     &rnso.tool_tip, notify_icon_state->toolTip.length / 2);
     }
 
@@ -1609,9 +1657,9 @@ lrail_NotifyIconCreate(rdpContext *context, WINDOW_ORDER_INFO *orderInfo,
     {
         rnso.infotip.timeout = notify_icon_state->infoTip.timeout;
         rnso.infotip.flags = notify_icon_state->infoTip.flags;
-        freerdp_UnicodeToAsciiAlloc(notify_icon_state->infoTip.text.string, 
+        freerdp_UnicodeToAsciiAlloc(notify_icon_state->infoTip.text.string,
                     &rnso.infotip.text, notify_icon_state->infoTip.text.length / 2);
-        freerdp_UnicodeToAsciiAlloc(notify_icon_state->infoTip.title.string, 
+        freerdp_UnicodeToAsciiAlloc(notify_icon_state->infoTip.title.string,
                     &rnso.infotip.title, notify_icon_state->infoTip.title.length / 2);
     }
 
@@ -1840,7 +1888,7 @@ mod_init(void)
 
     lcon = (modContext *)(mod->inst->context);
     lcon->modi = mod;
-    LLOGLN(10, ("mod_init: mod %p", mod));    
+    LLOGLN(10, ("mod_init: mod %p", mod));
 
     return mod;
 }
