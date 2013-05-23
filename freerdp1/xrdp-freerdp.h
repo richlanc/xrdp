@@ -169,6 +169,7 @@ struct mod
   int vrev;
   char username[256];
   char password[256];
+  char domain[256];
 
   struct xrdp_client_info client_info;
 

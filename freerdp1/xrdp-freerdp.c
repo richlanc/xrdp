@@ -426,6 +426,10 @@ lxrdp_set_param(struct mod *mod, char *name, char *value)
     {
         g_strncpy(mod->username, value, 255);
     }
+    else if (g_strcmp(name, "domain") == 0)
+    {
+        g_strncpy(mod->domain, value, 255);
+    }
     else if (g_strcmp(name, "password") == 0)
     {
         g_strncpy(mod->password, value, 255);
@@ -629,7 +633,7 @@ lfreerdp_dst_blt(rdpContext *context, DSTBLT_ORDER *dstblt)
     struct mod *mod;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_dst_blt: %x LT:%i,%i WH:%i,%i", dstblt->bRop, 
+    LLOGLN(10, ("lfreerdp_dst_blt: %x LT:%i,%i WH:%i,%i", dstblt->bRop,
                             dstblt->nLeftRect, dstblt->nTopRect,
                             dstblt->nWidth, dstblt->nHeight));
     mod->server_set_opcode(mod, dstblt->bRop);
@@ -651,7 +655,7 @@ lfreerdp_pat_blt(rdpContext *context, PATBLT_ORDER *patblt)
     struct brush_item *bi;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_pat_blt: %x LT:%i,%i WH:%i,%i", patblt->bRop, 
+    LLOGLN(10, ("lfreerdp_pat_blt: %x LT:%i,%i WH:%i,%i", patblt->bRop,
                             patblt->nLeftRect, patblt->nTopRect,
                             patblt->nWidth, patblt->nHeight));
 
@@ -708,7 +712,7 @@ lfreerdp_scr_blt(rdpContext *context, SCRBLT_ORDER *scrblt)
     struct mod *mod;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_scr_blt: %x LT:%i,%i WH:%i,%i XY:%i,%i", scrblt->bRop, 
+    LLOGLN(10, ("lfreerdp_scr_blt: %x LT:%i,%i WH:%i,%i XY:%i,%i", scrblt->bRop,
                             scrblt->nLeftRect, scrblt->nTopRect,
                             scrblt->nWidth, scrblt->nHeight,
                             scrblt->nXSrc, scrblt->nYSrc));
@@ -734,7 +738,7 @@ lfreerdp_opaque_rect(rdpContext *context, OPAQUE_RECT_ORDER *opaque_rect)
     fgcolor = convert_color(server_bpp, client_bpp,
                             opaque_rect->color, mod->colormap);
     mod->server_set_fgcolor(mod, fgcolor);
-    LLOGLN(10, ("lfreerdp_opaque_rect: Colour %i LT%i,%i WH:%i,%i", fgcolor, 
+    LLOGLN(10, ("lfreerdp_opaque_rect: Colour %i LT%i,%i WH:%i,%i", fgcolor,
                         opaque_rect->nLeftRect, opaque_rect->nTopRect,
                         opaque_rect->nWidth, opaque_rect->nHeight));
     mod->server_fill_rect(mod, opaque_rect->nLeftRect, opaque_rect->nTopRect,
@@ -1310,48 +1314,6 @@ static void DEFAULT_CC lfreerdp_syncronize(rdpContext* context)
     LLOGLN(0, ("lfreerdp_synchronize received - not handled"));
 }
 
-int freerdp_parse_username(char* username, char** user, char** domain)
-{
-    char* p;
-    int length;
-
-    p = strchr(username, '\\');
-
-    if (p)
-    {
-        length = p - username;
-        *domain = (char*) malloc(length + 1);
-        strncpy(*domain, username, length);
-        (*domain)[length] = '\0';
-        *user = g_strdup(&p[1]);
-    }
-    else
-    {
-        *user = g_strdup(username);
-        *domain = NULL;
-
-        /*
-        p = strchr(username, '@');
-
-        if (p)
-        {
-            length = p - username;
-            *user = (char*) malloc(length + 1);
-            strncpy(*user, username, length);
-            (*user)[length] = '\0';
-            *domain = g_strdup(&p[1]);
-        }
-        else
-        {
-            *user = g_strdup(username);
-            *domain = NULL;
-        }
-        */
-    }
-
-    return 0;
-}
-
 /******************************************************************************/
 static BOOL DEFAULT_CC
 lfreerdp_pre_connect(freerdp *instance)
@@ -1427,14 +1389,9 @@ lfreerdp_pre_connect(freerdp *instance)
     instance->settings->OrderSupport[NEG_MULTIOPAQUERECT_INDEX] = FALSE;
     instance->settings->OrderSupport[NEG_POLYLINE_INDEX] = FALSE;
 
-    char* user;
-    char* domain;
-
-    freerdp_parse_username(mod->username, &user, &domain);
-
-    instance->settings->Username = user;
+    instance->settings->Username = g_strdup(mod->username);
     instance->settings->Password = g_strdup(mod->password);
-    instance->settings->Domain = domain;
+    instance->settings->Domain = g_strdup(mod->domain);
 
     if (mod->client_info.rail_support_level > 0)
     {
