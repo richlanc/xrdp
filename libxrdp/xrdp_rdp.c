@@ -25,6 +25,12 @@
 #include <freerdp/codec/rfx.h>
 #endif
 
+#define LOG_LEVEL 1
+#define LLOG(_level, _args) \
+    do { if (_level < LOG_LEVEL) { g_write _args ; } } while (0)
+#define LLOGLN(_level, _args) \
+    do { if (_level < LOG_LEVEL) { g_writeln _args ; } } while (0)
+
 /* some compilers need unsigned char to avoid warnings */
 static tui8 g_unknown1[172] =
 {
@@ -114,6 +120,10 @@ xrdp_rdp_read_config(struct xrdp_client_info *client_info)
             else if (g_strcasecmp(value, "high") == 0)
             {
                 client_info->crypt_level = 3;
+            }
+            else if (g_strcasecmp(value, "fips") == 0)
+            {
+                client_info->crypt_level = 4;
             }
             else
             {

@@ -21,6 +21,12 @@
 #include "libxrdp.h"
 #include "log.h"
 
+#define LOG_LEVEL 1
+#define LLOG(_level, _args) \
+    do { if (_level < LOG_LEVEL) { g_write _args ; } } while (0)
+#define LLOGLN(_level, _args) \
+    do { if (_level < LOG_LEVEL) { g_writeln _args ; } } while (0)
+
 /* some compilers need unsigned char to avoid warnings */
 static tui8 g_pad_54[40] =
 {
@@ -100,6 +106,83 @@ static tui8 g_lic3[20] =
     0xf3, 0x99, 0x00, 0x00
 };
 
+static const tui8 g_fips_reverse_table[256] =
+{
+    0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
+    0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
+    0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
+    0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
+    0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4,
+    0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
+    0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec,
+    0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
+    0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2,
+    0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
+    0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea,
+    0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
+    0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6,
+    0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
+    0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee,
+    0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
+    0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1,
+    0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
+    0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9,
+    0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
+    0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5,
+    0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
+    0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed,
+    0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
+    0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3,
+    0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
+    0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb,
+    0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
+    0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7,
+    0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
+    0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef,
+    0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
+};
+
+static const tui8 g_fips_oddparity_table[256] =
+{
+    0x01, 0x01, 0x02, 0x02, 0x04, 0x04, 0x07, 0x07,
+    0x08, 0x08, 0x0b, 0x0b, 0x0d, 0x0d, 0x0e, 0x0e,
+    0x10, 0x10, 0x13, 0x13, 0x15, 0x15, 0x16, 0x16,
+    0x19, 0x19, 0x1a, 0x1a, 0x1c, 0x1c, 0x1f, 0x1f,
+    0x20, 0x20, 0x23, 0x23, 0x25, 0x25, 0x26, 0x26,
+    0x29, 0x29, 0x2a, 0x2a, 0x2c, 0x2c, 0x2f, 0x2f,
+    0x31, 0x31, 0x32, 0x32, 0x34, 0x34, 0x37, 0x37,
+    0x38, 0x38, 0x3b, 0x3b, 0x3d, 0x3d, 0x3e, 0x3e,
+    0x40, 0x40, 0x43, 0x43, 0x45, 0x45, 0x46, 0x46,
+    0x49, 0x49, 0x4a, 0x4a, 0x4c, 0x4c, 0x4f, 0x4f,
+    0x51, 0x51, 0x52, 0x52, 0x54, 0x54, 0x57, 0x57,
+    0x58, 0x58, 0x5b, 0x5b, 0x5d, 0x5d, 0x5e, 0x5e,
+    0x61, 0x61, 0x62, 0x62, 0x64, 0x64, 0x67, 0x67,
+    0x68, 0x68, 0x6b, 0x6b, 0x6d, 0x6d, 0x6e, 0x6e,
+    0x70, 0x70, 0x73, 0x73, 0x75, 0x75, 0x76, 0x76,
+    0x79, 0x79, 0x7a, 0x7a, 0x7c, 0x7c, 0x7f, 0x7f,
+    0x80, 0x80, 0x83, 0x83, 0x85, 0x85, 0x86, 0x86,
+    0x89, 0x89, 0x8a, 0x8a, 0x8c, 0x8c, 0x8f, 0x8f,
+    0x91, 0x91, 0x92, 0x92, 0x94, 0x94, 0x97, 0x97,
+    0x98, 0x98, 0x9b, 0x9b, 0x9d, 0x9d, 0x9e, 0x9e,
+    0xa1, 0xa1, 0xa2, 0xa2, 0xa4, 0xa4, 0xa7, 0xa7,
+    0xa8, 0xa8, 0xab, 0xab, 0xad, 0xad, 0xae, 0xae,
+    0xb0, 0xb0, 0xb3, 0xb3, 0xb5, 0xb5, 0xb6, 0xb6,
+    0xb9, 0xb9, 0xba, 0xba, 0xbc, 0xbc, 0xbf, 0xbf,
+    0xc1, 0xc1, 0xc2, 0xc2, 0xc4, 0xc4, 0xc7, 0xc7,
+    0xc8, 0xc8, 0xcb, 0xcb, 0xcd, 0xcd, 0xce, 0xce,
+    0xd0, 0xd0, 0xd3, 0xd3, 0xd5, 0xd5, 0xd6, 0xd6,
+    0xd9, 0xd9, 0xda, 0xda, 0xdc, 0xdc, 0xdf, 0xdf,
+    0xe0, 0xe0, 0xe3, 0xe3, 0xe5, 0xe5, 0xe6, 0xe6,
+    0xe9, 0xe9, 0xea, 0xea, 0xec, 0xec, 0xef, 0xef,
+    0xf1, 0xf1, 0xf2, 0xf2, 0xf4, 0xf4, 0xf7, 0xf7,
+    0xf8, 0xf8, 0xfb, 0xfb, 0xfd, 0xfd, 0xfe, 0xfe
+};
+
+static const tui8 g_fips_ivec[8] =
+{
+    0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF
+};
+
 /*****************************************************************************/
 static void APP_CC
 hex_str_to_bin(char *in, char *out, int out_len)
@@ -145,22 +228,25 @@ xrdp_sec_create(struct xrdp_rdp *owner, struct trans *trans, int crypt_level,
     DEBUG((" in xrdp_sec_create"));
     self = (struct xrdp_sec *)g_malloc(sizeof(struct xrdp_sec), 1);
     self->rdp_layer = owner;
-    self->rc4_key_size = 1; /* 1 = 40 bit, 2 = 128 bit */
-    self->crypt_level = 1; /* 1, 2, 3 = low, medium, high */
-
+    self->crypt_method = CRYPT_METHOD_NONE;
+    self->crypt_level = CRYPT_LEVEL_NONE;
     switch (crypt_level)
     {
-        case 1:
-            self->rc4_key_size = 1;
-            self->crypt_level = 1;
+        case 1: /* low */
+            self->crypt_method = CRYPT_METHOD_40BIT;
+            self->crypt_level = CRYPT_LEVEL_LOW;
             break;
-        case 2:
-            self->rc4_key_size = 1;
-            self->crypt_level = 2;
+        case 2: /* medium */
+            self->crypt_method = CRYPT_METHOD_40BIT;
+            self->crypt_level = CRYPT_LEVEL_CLIENT_COMPATIBLE;
             break;
-        case 3:
-            self->rc4_key_size = 2;
-            self->crypt_level = 3;
+        case 3: /* high */
+            self->crypt_method = CRYPT_METHOD_128BIT;
+            self->crypt_level = CRYPT_LEVEL_HIGH;
+            break;
+        case 4: /* fips */
+            self->crypt_method = CRYPT_METHOD_FIPS;
+            self->crypt_level = CRYPT_LEVEL_FIPS;
             break;
         default:
             g_writeln("Fatal : Illegal crypt_level");
@@ -203,6 +289,8 @@ xrdp_sec_delete(struct xrdp_sec *self)
     xrdp_mcs_delete(self->mcs_layer);
     ssl_rc4_info_delete(self->decrypt_rc4_info); /* TODO clear all data */
     ssl_rc4_info_delete(self->encrypt_rc4_info); /* TODO clear all data */
+    ssl_des3_info_delete(self->decrypt_fips_info);
+    ssl_des3_info_delete(self->encrypt_fips_info);
     g_free(self->client_mcs_data.data);
     g_free(self->server_mcs_data.data);
     /* Crypto information must always be cleared */
@@ -220,7 +308,11 @@ xrdp_sec_init(struct xrdp_sec *self, struct stream *s)
         return 1;
     }
 
-    if (self->crypt_level > 1)
+    if (self->crypt_level == CRYPT_LEVEL_FIPS)
+    {
+        s_push_layer(s, sec_hdr, 4 + 4 + 8);
+    }
+    else if (self->crypt_level > CRYPT_LEVEL_LOW)
     {
         s_push_layer(s, sec_hdr, 4 + 8);
     }
@@ -282,6 +374,15 @@ xrdp_sec_update(char *key, char *update_key, int key_len)
 
 /*****************************************************************************/
 static void APP_CC
+xrdp_sec_fips_decrypt(struct xrdp_sec *self, char *data, int len)
+{
+    LLOGLN(10, ("xrdp_sec_fips_decrypt:"));
+    ssl_des3_decrypt(self->decrypt_fips_info, len, data, data);
+    self->decrypt_use_count++;
+}
+
+/*****************************************************************************/
+static void APP_CC
 xrdp_sec_decrypt(struct xrdp_sec *self, char *data, int len)
 {
     if (self->decrypt_use_count == 4096)
@@ -292,9 +393,17 @@ xrdp_sec_decrypt(struct xrdp_sec *self, char *data, int len)
                         self->rc4_key_len);
         self->decrypt_use_count = 0;
     }
-
     ssl_rc4_crypt(self->decrypt_rc4_info, data, len);
     self->decrypt_use_count++;
+}
+
+/*****************************************************************************/
+static void APP_CC
+xrdp_sec_fips_encrypt(struct xrdp_sec *self, char *data, int len)
+{
+    LLOGLN(10, ("xrdp_sec_fips_encrypt:"));
+    ssl_des3_encrypt(self->encrypt_fips_info, len, data, data);
+    self->encrypt_use_count++;
 }
 
 /*****************************************************************************/
@@ -309,7 +418,6 @@ xrdp_sec_encrypt(struct xrdp_sec *self, char *data, int len)
                         self->rc4_key_len);
         self->encrypt_use_count = 0;
     }
-
     ssl_rc4_crypt(self->encrypt_rc4_info, data, len);
     self->encrypt_use_count++;
 }
@@ -622,11 +730,102 @@ xrdp_sec_hash_16(char *out, char *in, char *salt1, char *salt2)
 
 /*****************************************************************************/
 static void APP_CC
+fips_expand_key_bits(const char *in, char *out)
+{
+    tui8 buf[32];
+    tui8 c;
+    int i;
+    int b;
+    int p;
+    int r;
+
+    /* reverse every byte in the key */
+    for (i = 0; i < 21; i++)
+    {
+        c = in[i];
+        buf[i] = g_fips_reverse_table[c];
+    }
+    /* insert a zero-bit after every 7th bit */
+    for (i = 0, b = 0; i < 24; i++, b += 7)
+    {
+        p = b / 8;
+        r = b % 8;
+        if (r == 0)
+        {
+            out[i] = buf[p] & 0xfe;
+        }
+        else
+        {
+            /* c is accumulator */
+            c = buf[p] << r;
+            c |= buf[p + 1] >> (8 - r);
+            out[i] = c & 0xfe;
+        }
+    }
+    /* reverse every byte */
+    /* alter lsb so the byte has odd parity */
+    for (i = 0; i < 24; i++)
+    {
+        c = out[i];
+        c = g_fips_reverse_table[c];
+        out[i] = g_fips_oddparity_table[c];
+    }
+}
+
+/****************************************************************************/
+static void APP_CC
+xrdp_sec_fips_establish_keys(struct xrdp_sec *self)
+{
+    char server_encrypt_key[32];
+    char server_decrypt_key[32];
+    const char *fips_ivec;
+    void *sha1;
+
+    LLOGLN(0, ("xrdp_sec_fips_establish_keys:"));
+
+    sha1 = ssl_sha1_info_create();
+    ssl_sha1_clear(sha1);
+    ssl_sha1_transform(sha1, self->client_random + 16, 16);
+    ssl_sha1_transform(sha1, self->server_random + 16, 16);
+    ssl_sha1_complete(sha1, server_decrypt_key);
+
+    server_decrypt_key[20] = server_decrypt_key[0];
+    fips_expand_key_bits(server_decrypt_key, self->fips_decrypt_key);
+    ssl_sha1_info_delete(sha1);
+
+    sha1 = ssl_sha1_info_create();
+    ssl_sha1_clear(sha1);
+    ssl_sha1_transform(sha1, self->client_random, 16);
+    ssl_sha1_transform(sha1, self->server_random, 16);
+    ssl_sha1_complete(sha1, server_encrypt_key);
+    server_encrypt_key[20] = server_encrypt_key[0];
+    fips_expand_key_bits(server_encrypt_key, self->fips_encrypt_key);
+    ssl_sha1_info_delete(sha1);
+
+    sha1 = ssl_sha1_info_create();
+    ssl_sha1_clear(sha1);
+    ssl_sha1_transform(sha1, server_encrypt_key, 20);
+    ssl_sha1_transform(sha1, server_decrypt_key, 20);
+    ssl_sha1_complete(sha1, self->fips_sign_key);
+    ssl_sha1_info_delete(sha1);
+
+    fips_ivec = (const char *) g_fips_ivec;
+    self->encrypt_fips_info =
+          ssl_des3_encrypt_info_create(self->fips_encrypt_key, fips_ivec);
+    self->decrypt_fips_info =
+          ssl_des3_decrypt_info_create(self->fips_decrypt_key, fips_ivec);
+    self->sign_fips_info = ssl_hmac_info_create();
+}
+
+/****************************************************************************/
+static void APP_CC
 xrdp_sec_establish_keys(struct xrdp_sec *self)
 {
     char session_key[48];
     char temp_hash[48];
     char input[48];
+
+    LLOGLN(0, ("xrdp_sec_establish_keys:"));
 
     g_memcpy(input, self->client_random, 24);
     g_memcpy(input + 24, self->server_random, 24);
@@ -640,7 +839,7 @@ xrdp_sec_establish_keys(struct xrdp_sec *self)
     xrdp_sec_hash_16(self->decrypt_key, session_key + 32, self->client_random,
                      self->server_random);
 
-    if (self->rc4_key_size == 1)
+    if (self->crypt_method == CRYPT_METHOD_40BIT)
     {
         xrdp_sec_make_40bit(self->sign_key);
         xrdp_sec_make_40bit(self->encrypt_key);
@@ -665,6 +864,8 @@ xrdp_sec_recv(struct xrdp_sec *self, struct stream *s, int *chan)
 {
     int flags;
     int len;
+    int ver;
+    int pad;
 
     DEBUG((" in xrdp_sec_recv"));
 
@@ -679,8 +880,34 @@ xrdp_sec_recv(struct xrdp_sec *self, struct stream *s, int *chan)
 
     if (flags & SEC_ENCRYPT) /* 0x08 */
     {
-        in_uint8s(s, 8); /* signature */
-        xrdp_sec_decrypt(self, s->p, (int)(s->end - s->p));
+        if (self->crypt_level == CRYPT_LEVEL_FIPS)
+        {
+            if (!s_check_rem(s, 12))
+            {
+                return 1;
+            }
+            in_uint16_le(s, len);
+            in_uint8(s, ver);
+            if ((len != 16) || (ver != 1))
+            {
+                return 1;
+            }
+            in_uint8(s, pad);
+            LLOGLN(10, ("xrdp_sec_recv: len %d ver %d pad %d", len, ver, pad));
+            in_uint8s(s, 8); /* signature(8) */
+            LLOGLN(10, ("xrdp_sec_recv: data len %d", (int)(s->end - s->p)));
+            xrdp_sec_fips_decrypt(self, s->p, (int)(s->end - s->p));
+            s->end -= pad;
+        }
+        else
+        {
+            if (!s_check_rem(s, 8))
+            {
+                return 1;
+            }
+            in_uint8s(s, 8); /* signature(8) */
+            xrdp_sec_decrypt(self, s->p, (int)(s->end - s->p));
+        }
     }
 
     if (flags & SEC_CLIENT_RANDOM) /* 0x01 */
@@ -689,7 +916,14 @@ xrdp_sec_recv(struct xrdp_sec *self, struct stream *s, int *chan)
         in_uint8a(s, self->client_crypt_random, 64);
         xrdp_sec_rsa_op(self->client_random, self->client_crypt_random,
                         self->pub_mod, self->pri_exp);
-        xrdp_sec_establish_keys(self);
+        if (self->crypt_level == CRYPT_LEVEL_FIPS)
+        {
+            xrdp_sec_fips_establish_keys(self);
+        }
+        else
+        {
+            xrdp_sec_establish_keys(self);
+        }
         *chan = 1; /* just set a non existing channel and exit */
         DEBUG((" out xrdp_sec_recv"));
         return 0;
@@ -756,6 +990,23 @@ buf_out_uint32(char *buffer, int value)
 /*****************************************************************************/
 /* Generate a MAC hash (5.2.3.1), using a combination of SHA1 and MD5 */
 static void APP_CC
+xrdp_sec_fips_sign(struct xrdp_sec *self, char *out, int out_len,
+                   char *data, int data_len)
+{
+    char buf[20];
+    char lenhdr[4];
+
+    buf_out_uint32(lenhdr, self->encrypt_use_count);
+    ssl_hmac_sha1_init(self->sign_fips_info, self->fips_sign_key, 20);
+    ssl_hmac_transform(self->sign_fips_info, data, data_len);
+    ssl_hmac_transform(self->sign_fips_info, lenhdr, 4);
+    ssl_hmac_complete(self->sign_fips_info, buf, 20);
+    g_memcpy(out, buf, out_len);
+}
+
+/*****************************************************************************/
+/* Generate a MAC hash (5.2.3.1), using a combination of SHA1 and MD5 */
+static void APP_CC
 xrdp_sec_sign(struct xrdp_sec *self, char *out, int out_len,
               char *data, int data_len)
 {
@@ -790,11 +1041,26 @@ int APP_CC
 xrdp_sec_send(struct xrdp_sec *self, struct stream *s, int chan)
 {
     int datalen;
+    int pad;
 
     DEBUG((" in xrdp_sec_send"));
     s_pop_layer(s, sec_hdr);
 
-    if (self->crypt_level > 1)
+    if (self->crypt_level == CRYPT_LEVEL_FIPS)
+    {
+        LLOGLN(10, ("xrdp_sec_send: fips"));
+        out_uint32_le(s, SEC_ENCRYPT);
+        datalen = (int)((s->end - s->p) - 12);
+        out_uint16_le(s, 16); /* crypto header size */
+        out_uint8(s, 1); /* fips version */
+        pad = (8 - (datalen % 8)) & 7;
+        g_memset(s->end, 0, pad);
+        s->end += pad;
+        out_uint8(s, pad); /* fips pad */
+        xrdp_sec_fips_sign(self, s->p, 8, s->p + 8, datalen);
+        xrdp_sec_fips_encrypt(self, s->p + 8, datalen + pad);
+    }
+    else if (self->crypt_level > CRYPT_LEVEL_LOW)
     {
         out_uint32_le(s, SEC_ENCRYPT);
         datalen = (int)((s->end - s->p) - 8);
@@ -852,6 +1118,90 @@ xrdp_sec_process_mcs_data_channels(struct xrdp_sec *self, struct stream *s)
 }
 
 /*****************************************************************************/
+static int APP_CC
+xrdp_sec_process_mcs_data_security(struct xrdp_sec *self, struct stream *s)
+{
+    int crypt_method;
+    int found;
+
+    g_writeln("xrdp_sec_process_mcs_data_CS_SECURITY:");
+    in_uint32_le(s, crypt_method);
+    if (crypt_method & CRYPT_METHOD_40BIT)
+    {
+        g_writeln("  client supports 40 bit encryption");
+    }
+    if (crypt_method & CRYPT_METHOD_128BIT)
+    {
+        g_writeln("  client supports 128 bit encryption");
+    }
+    if (crypt_method & CRYPT_METHOD_56BIT)
+    {
+        g_writeln("  client supports 56 bit encryption");
+    }
+    if (crypt_method & CRYPT_METHOD_FIPS)
+    {
+        g_writeln("  client supports fips encryption");
+    }
+    found = 0;
+    if ((found == 0) &&
+        (self->crypt_method & CRYPT_METHOD_FIPS) &&
+        (self->crypt_level == CRYPT_LEVEL_FIPS))
+    {
+        if (crypt_method & CRYPT_METHOD_FIPS)
+        {
+            g_writeln("  client and server support fips, using fips");
+            self->crypt_method = CRYPT_METHOD_FIPS;
+            self->crypt_level = CRYPT_LEVEL_FIPS;
+            found = 1;
+        }
+    }
+    if ((found == 0) &&
+        (self->crypt_method & CRYPT_METHOD_128BIT) &&
+        (self->crypt_level == CRYPT_LEVEL_HIGH))
+    {
+        if (crypt_method & CRYPT_METHOD_128BIT)
+        {
+            g_writeln("  client and server support high crypt, using "
+                      "high crypt");
+            self->crypt_method = CRYPT_METHOD_128BIT;
+            self->crypt_level = CRYPT_LEVEL_HIGH;
+            found = 1;
+        }
+    }
+    if ((found == 0) &&
+        (self->crypt_method & CRYPT_METHOD_40BIT) &&
+        (self->crypt_level == CRYPT_LEVEL_CLIENT_COMPATIBLE))
+    {
+        if (crypt_method & CRYPT_METHOD_40BIT)
+        {
+            g_writeln("  client and server support medium crypt, using "
+                      "medium crypt");
+            self->crypt_method = CRYPT_METHOD_40BIT;
+            self->crypt_level = CRYPT_LEVEL_CLIENT_COMPATIBLE;
+            found = 1;
+        }
+    }
+    if ((found == 0) &&
+        (self->crypt_method & CRYPT_METHOD_40BIT) &&
+        (self->crypt_level == CRYPT_LEVEL_LOW))
+    {
+        if (crypt_method & CRYPT_METHOD_40BIT)
+        {
+            g_writeln("  client and server support low crypt, using "
+                      "low crypt");
+            self->crypt_method = CRYPT_METHOD_40BIT;
+            self->crypt_level = CRYPT_LEVEL_LOW;
+            found = 1;
+        }
+    }
+    if (found == 0)
+    {
+        g_writeln("  no security");
+    }
+    return 0;
+}
+
+/*****************************************************************************/
 /* process client mcs data, we need some things in here to create the server
    mcs data */
 int APP_CC
@@ -886,6 +1236,7 @@ xrdp_sec_process_mcs_data(struct xrdp_sec *self)
             case SEC_TAG_CLI_INFO:
                 break;
             case SEC_TAG_CLI_CRYPT:
+                xrdp_sec_process_mcs_data_security(self, s);
                 break;
             case SEC_TAG_CLI_CHANNELS:
                 xrdp_sec_process_mcs_data_channels(self, s);
@@ -965,9 +1316,8 @@ xrdp_sec_out_mcs_data(struct xrdp_sec *self)
 
     out_uint16_le(s, SEC_TAG_SRV_CRYPT);
     out_uint16_le(s, 0x00ec); /* len is 236 */
-    out_uint32_le(s, self->rc4_key_size); /* key len 1 = 40 bit 2 = 128 bit */
-    out_uint32_le(s, self->crypt_level); /* crypt level 1 = low 2 = medium */
-    /* 3 = high */
+    out_uint32_le(s, self->crypt_method);
+    out_uint32_le(s, self->crypt_level);
     out_uint32_le(s, 32);     /* 32 bytes random len */
     out_uint32_le(s, 0xb8);   /* 184 bytes rsa info(certificate) len */
     out_uint8a(s, self->server_random, 32);
