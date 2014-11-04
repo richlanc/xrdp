@@ -420,6 +420,10 @@ lxrdp_set_param(struct mod *mod, char *name, char *value)
     {
         g_strncpy(mod->username, value, 255);
     }
+    else if (g_strcmp(name, "domain") == 0)
+    {
+        g_strncpy(mod->domain, value, 255);
+    }
     else if (g_strcmp(name, "password") == 0)
     {
         g_strncpy(mod->password, value, 255);
@@ -1431,6 +1435,7 @@ lfreerdp_pre_connect(freerdp *instance)
 
     instance->settings->username = g_strdup(mod->username);
     instance->settings->password = g_strdup(mod->password);
+    instance->settings->domain = g_strdup(mod->domain);
 
     if (mod->client_info.rail_support_level > 0)
     {

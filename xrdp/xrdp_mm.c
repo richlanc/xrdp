@@ -195,6 +195,7 @@ xrdp_mm_send_login(struct xrdp_mm *self)
     int count;
     int xserverbpp;
     char *username;
+    char *domain;
     char *password;
     char *name;
     char *value;
@@ -203,6 +204,8 @@ xrdp_mm_send_login(struct xrdp_mm *self)
                     "please wait...");
     username = 0;
     password = 0;
+    domain = 0;
+
     self->code = 0;
     xserverbpp = 0;
     count = self->login_names->count;
@@ -228,6 +231,10 @@ xrdp_mm_send_login(struct xrdp_mm *self)
         else if (g_strcasecmp(name, "xserverbpp") == 0)
         {
             xserverbpp = g_atoi(value);
+        }
+        else if (g_strcasecmp(name, "domain") == 0)
+        {
+            domain = value;
         }
     }
 
@@ -260,18 +267,30 @@ xrdp_mm_send_login(struct xrdp_mm *self)
         out_uint16_be(s, self->wm->screen->bpp);
     }
 
-    /* send domain */
-    if(self->wm->client_info->domain[0]!='_')
+    if (domain == 0)
     {
-        index = g_strlen(self->wm->client_info->domain);
-        out_uint16_be(s, index);
-        out_uint8a(s, self->wm->client_info->domain, index);
+        out_uint16_be(s, 0);
     }
     else
     {
-        out_uint16_be(s, 0);
-        /* out_uint8a(s, "", 0); */
+        index = g_strlen(domain);
+        out_uint16_be(s, index);
+        out_uint8a(s, domain, index);
     }
+
+
+    /* send domain */
+    // if(self->wm->client_info->domain[0]!='_')
+    // {
+    //     index = g_strlen(self->wm->client_info->domain);
+    //     out_uint16_be(s, index);
+    //     out_uint8a(s, self->wm->client_info->domain, index);
+    // }
+    // else
+    // {
+    //     out_uint16_be(s, 0);
+    //     /* out_uint8a(s, "", 0); */
+    // }
 
     /* send program / shell */
     index = g_strlen(self->wm->client_info->program);
