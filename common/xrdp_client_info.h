@@ -133,6 +133,9 @@ struct xrdp_client_info
   char layout[16];
   char variant[16];
 
+  int use_osirium_preamble;
+  char *osirium_preamble_buffer;
+
 };
 
 #endif

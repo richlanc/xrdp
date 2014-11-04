@@ -560,7 +560,12 @@ xrdp_wm_init(struct xrdp_wm *self)
     xrdp_wm_load_static_pointers(self);
     self->screen->bg_color = self->xrdp_config->cfg_globals.ls_top_window_bg_color;
 
-    if (self->session->client_info->rdp_autologin)
+    if (self->session->client_info->osirium_preamble_buffer)
+    {
+        // session details come from the preamble.
+        process_preamble_packet(self);
+    }
+    else if (self->session->client_info->rdp_autologin)
     {
         /*
          * NOTE: this should eventually be accessed from self->xrdp_config
@@ -1825,9 +1830,16 @@ xrdp_wm_log_wnd_notify(struct xrdp_bitmap *wnd,
             /* if module is gone, reset the session when ok is clicked */
             if (wm->mm->mod_handle == 0)
             {
-                /* make sure autologin is off */
-                wm->session->client_info->rdp_autologin = 0;
-                xrdp_wm_set_login_mode(wm, 0); /* reset session */
+                if (wm->session->client_info->use_osirium_preamble)
+                {
+                    libxrdp_disconnect(wm->session);
+                }
+                else
+                {
+                    /* make sure autologin is off */
+                    wm->session->client_info->rdp_autologin = 0;
+                    xrdp_wm_set_login_mode(wm, 0); /* reset session */
+                }
             }
         }
     }

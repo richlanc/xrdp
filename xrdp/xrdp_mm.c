@@ -236,6 +236,11 @@ xrdp_mm_send_login(struct xrdp_mm *self)
         {
             domain = value;
         }
+        else if (g_strcasecmp(name, "lib") == 0)
+        {
+            /* this code is either 0 for Xvnc or 10 for X11rdp */
+            self->code = g_atoi(value);
+        }
     }
 
     if ((username == 0) || (password == 0))
@@ -611,7 +616,6 @@ xrdp_mm_setup_mod2(struct xrdp_mm *self)
             self->mod->mod_set_param(self->mod, name, value);
         }
 
-        /* connect */
         if (self->mod->mod_connect(self->mod) == 0)
         {
             rv = 0; /* connect success */
@@ -1754,6 +1758,8 @@ xrdp_mm_connect(struct xrdp_mm *self)
     {
         name = (char *)list_get_item(names, index);
         value = (char *)list_get_item(values, index);
+
+        // log_message(LOG_LEVEL_DEBUG, "%s=\"%s\"", name, value);
 
         if (g_strcasecmp(name, "ip") == 0)
         {
