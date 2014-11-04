@@ -540,10 +540,12 @@ lfreerdp_set_bounds(rdpContext *context, rdpBounds *bounds)
         y = bounds->top;
         cx = (bounds->right - bounds->left) + 1;
         cy = (bounds->bottom - bounds->top) + 1;
+        LLOGLN(0, ("lfreerdp_set_bounds: LT:%i,%i WH:%i,%i", bounds->left, bounds->top, cx, cy));
         mod->server_set_clip(mod, x, y, cx, cy);
     }
     else
     {
+        LLOGLN(1, ("lfreerdp_set_bounds: reset"));
         mod->server_reset_clip(mod);
     }
 }
@@ -626,7 +628,9 @@ lfreerdp_dst_blt(rdpContext *context, DSTBLT_ORDER *dstblt)
     struct mod *mod;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_dst_blt:"));
+    LLOGLN(10, ("lfreerdp_dst_blt: %x LT:%i,%i WH:%i,%i", dstblt->bRop,
+                            dstblt->nLeftRect, dstblt->nTopRect,
+                            dstblt->nWidth, dstblt->nHeight));
     mod->server_set_opcode(mod, dstblt->bRop);
     mod->server_fill_rect(mod, dstblt->nLeftRect, dstblt->nTopRect,
                           dstblt->nWidth, dstblt->nHeight);
@@ -646,7 +650,9 @@ lfreerdp_pat_blt(rdpContext *context, PATBLT_ORDER *patblt)
     struct brush_item *bi;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_pat_blt:"));
+    LLOGLN(10, ("lfreerdp_pat_blt: %x LT:%i,%i WH:%i,%i", patblt->bRop,
+                            patblt->nLeftRect, patblt->nTopRect,
+                            patblt->nWidth, patblt->nHeight));
 
     server_bpp = mod->inst->settings->color_depth;
     client_bpp = mod->bpp;
@@ -656,6 +662,7 @@ lfreerdp_pat_blt(rdpContext *context, PATBLT_ORDER *patblt)
                             patblt->foreColor, mod->colormap);
     bgcolor = convert_color(server_bpp, client_bpp,
                             patblt->backColor, mod->colormap);
+    LLOGLN(10, ("lfreerdp_pat_blt: Colours:%i,%i", bgcolor, fgcolor));
 
     LLOGLN(10, ("lfreerdp_pat_blt: nLeftRect %d nTopRect %d "
            "nWidth %d nHeight %d fgcolor 0x%8.8x bgcolor 0x%8.8x",
@@ -706,7 +713,10 @@ lfreerdp_scr_blt(rdpContext *context, SCRBLT_ORDER *scrblt)
     struct mod *mod;
 
     mod = ((struct mod_context *)context)->modi;
-    LLOGLN(10, ("lfreerdp_scr_blt:"));
+    LLOGLN(10, ("lfreerdp_scr_blt: %x LT:%i,%i WH:%i,%i XY:%i,%i", scrblt->bRop,
+                            scrblt->nLeftRect, scrblt->nTopRect,
+                            scrblt->nWidth, scrblt->nHeight,
+                            scrblt->nXSrc, scrblt->nYSrc));
     mod->server_set_opcode(mod, scrblt->bRop);
     mod->server_screen_blt(mod, scrblt->nLeftRect, scrblt->nTopRect,
                            scrblt->nWidth, scrblt->nHeight,
@@ -734,6 +744,9 @@ lfreerdp_opaque_rect(rdpContext *context, OPAQUE_RECT_ORDER *opaque_rect)
            opaque_rect->nLeftRect, opaque_rect->nTopRect,
            opaque_rect->nWidth, opaque_rect->nHeight, fgcolor));
     mod->server_set_fgcolor(mod, fgcolor);
+    LLOGLN(10, ("lfreerdp_opaque_rect: Colour %i LT%i,%i WH:%i,%i", fgcolor,
+                        opaque_rect->nLeftRect, opaque_rect->nTopRect,
+                        opaque_rect->nWidth, opaque_rect->nHeight));
     mod->server_fill_rect(mod, opaque_rect->nLeftRect, opaque_rect->nTopRect,
                           opaque_rect->nWidth, opaque_rect->nHeight);
 }
