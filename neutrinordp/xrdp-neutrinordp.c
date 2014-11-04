@@ -991,15 +991,13 @@ lfreerdp_cache_glyph(rdpContext *context, CACHE_GLYPH_ORDER *cache_glyph_order)
 
     for (index = 0; index < cache_glyph_order->cGlyphs; index++)
     {
-        gd = cache_glyph_order->glyphData[index];
-        LLOGLN(10, ("  %d %d %d %d %d", gd->cacheIndex, gd->x, gd->y,
+        gd = &cache_glyph_order->glyphData[index];
+        LLOGLN(10, ("Index %d TL:%d,%d WH:%d,%d", gd->cacheIndex, gd->x, gd->y,
                     gd->cx, gd->cy));
         mod->server_add_char(mod, cache_glyph_order->cacheId, gd->cacheIndex,
                              gd->x, gd->y, gd->cx, gd->cy, (char *)(gd->aj));
         free(gd->aj);
         gd->aj = 0;
-        free(gd);
-        cache_glyph_order->glyphData[index] = 0;
     }
 
     free(cache_glyph_order->unicodeCharacters);
@@ -1064,9 +1062,6 @@ lfreerdp_cache_brush(rdpContext *context, CACHE_BRUSH_ORDER *cache_brush_order)
 
     LLOGLN(10, ("lfreerdp_cache_brush: out bpp %d cx %d cy %d idx %d bytes %d",
                 bpp, cx, cy, idx, bytes));
-
-    free(cache_brush_order->data);
-    cache_brush_order->data = 0;
 
 }
 
@@ -1401,8 +1396,8 @@ lfreerdp_pre_connect(freerdp *instance)
 
     instance->settings->glyph_cache = true;
     /* GLYPH_SUPPORT_FULL and GLYPH_SUPPORT_PARTIAL seem to be the same */
-    instance->settings->glyphSupportLevel = GLYPH_SUPPORT_FULL;
-    instance->settings->order_support[NEG_GLYPH_INDEX_INDEX] = 1;
+    instance->settings->glyphSupportLevel = GLYPH_SUPPORT_NONE;
+    instance->settings->order_support[NEG_GLYPH_INDEX_INDEX] = 0;
     instance->settings->order_support[NEG_FAST_GLYPH_INDEX] = 0;
     instance->settings->order_support[NEG_FAST_INDEX_INDEX] = 0;
     instance->settings->order_support[NEG_SCRBLT_INDEX] = 1;
