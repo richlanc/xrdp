@@ -1033,6 +1033,40 @@ xrdp_rdp_send_fontmap(struct xrdp_rdp *self)
 
 /*****************************************************************************/
 static int APP_CC
+xrdp_rdp_send_session_info(struct xrdp_rdp *self)
+{
+
+    struct stream *s;
+
+    make_stream(s);
+    init_stream(s, 8192);
+
+    if (xrdp_rdp_init_data(self, s) != 0)
+    {
+        free_stream(s);
+        return 1;
+    }
+
+    /* plain notify */
+    out_uint32_le(s, 2);
+    out_uint8s(s, 576);
+
+    s_mark_end(s);
+
+    /* SAVE_SESSION_INFO 0x26 */
+    if (xrdp_rdp_send_data(self, s, 0x26) != 0)
+    {
+        free_stream(s);
+        return 1;
+    }
+
+    free_stream(s);
+    return 0;
+
+}
+
+/*****************************************************************************/
+static int APP_CC
 xrdp_rdp_process_data_font(struct xrdp_rdp *self, struct stream *s)
 {
     int seq;
@@ -1055,6 +1089,10 @@ xrdp_rdp_process_data_font(struct xrdp_rdp *self, struct stream *s)
         DEBUG(("up_and_running set"));
         xrdp_rdp_send_data_update_sync(self);
     }
+
+    /* todo, delete me */
+    /* dirty hack for login notify message, always sending it */
+    xrdp_rdp_send_session_info(self);
 
     DEBUG(("out xrdp_rdp_process_data_font"));
     return 0;
