@@ -420,6 +420,10 @@ lxrdp_set_param(struct mod *mod, char *name, char *value)
     {
         settings->nla_security = g_text2bool(value);
     }
+    else if (g_strcmp(name, "disable_wallpaper") == 0)
+    {
+        settings->disable_wallpaper = g_text2bool(value);
+    }
     else
     {
         LLOGLN(0, ("lxrdp_set_param: unknown name [%s] value [%s]", name, value));
@@ -1496,6 +1500,7 @@ lfreerdp_pre_connect(freerdp *instance)
     instance->settings->order_support[NEG_GLYPH_WLONGEXTTEXTOUT_INDEX] = 0;
     /* 0x1F missing*/
 
+    /* bitmap cache */
     instance->settings->bitmap_cache = 1;
     instance->settings->bitmapCacheV2NumCells = 3; // 5;
     instance->settings->bitmapCacheV2CellInfo[0].numEntries = 600; // 0x78;
@@ -1511,29 +1516,30 @@ lfreerdp_pre_connect(freerdp *instance)
 
     instance->settings->bitmap_cache_v3 = 1;
 
+    /* credentials */
     instance->settings->username = g_strdup(mod->username);
     instance->settings->password = g_strdup(mod->password);
     instance->settings->domain = g_strdup(mod->domain);
 
+    /* rail */
     if (mod->client_info.rail_support_level > 0)
     {
         LLOGLN(0, ("Railsupport !!!!!!!!!!!!!!!!!!"));
         instance->settings->remote_app = 1;
         instance->settings->rail_langbar_supported = 1;
         instance->settings->workarea = 1;
-        instance->settings->performance_flags = mod->client_info.rdp5_performanceflags;
         instance->settings->num_icon_caches = mod->client_info.wnd_num_icon_caches;
         instance->settings->num_icon_cache_entries = mod->client_info.wnd_num_icon_cache_entries;
     }
-    else
+
+    /* performance flags */
+    instance->settings->performance_flags = mod->client_info.rdp5_performanceflags;
+    if (instance->settings->disable_wallpaper)
     {
-        LLOGLN(10, ("Special PerformanceFlags changed"));
-        instance->settings->performance_flags = PERF_DISABLE_WALLPAPER |
-                PERF_DISABLE_FULLWINDOWDRAG | PERF_DISABLE_MENUANIMATIONS |
-                PERF_DISABLE_THEMING;
-                // | PERF_DISABLE_CURSOR_SHADOW | PERF_DISABLE_CURSORSETTINGS;
+        instance->settings->performance_flags |= PERF_DISABLE_WALLPAPER;
     }
 
+    /* keyboard layout */
     instance->settings->kbd_layout = mod->client_info.keylayout;
     instance->settings->kbd_type = mod->client_info.keyboard_type;
     instance->settings->kbd_subtype = mod->client_info.keyboard_subtype;
@@ -1541,7 +1547,7 @@ lfreerdp_pre_connect(freerdp *instance)
     instance->settings->compression = 0;
     instance->settings->ignore_certificate = 1;
 
-    // Multi Monitor Settings
+    /* multi mon */
     instance->settings->num_monitors = mod->client_info.monitorCount;
     for (index = 0; index < mod->client_info.monitorCount; index++)
     {
