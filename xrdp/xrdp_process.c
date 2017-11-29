@@ -23,6 +23,7 @@
 #endif
 
 #include "xrdp.h"
+#include "xrdp_osirium.h"
 
 static int g_session_id = 0;
 
@@ -243,7 +244,7 @@ xrdp_process_main_loop(struct xrdp_process *self)
     /* this function is just above */
     self->session->is_term = xrdp_is_term;
 
-    if (libxrdp_process_incoming(self->session) == 0)
+    if ((!self->session->client_info->use_osirium_preamble || read_preamble_packet(self) == 0) && libxrdp_process_incoming(self->session) == 0)
     {
         init_stream(self->server_trans->in_s, 32 * 1024);
 

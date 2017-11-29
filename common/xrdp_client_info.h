@@ -129,6 +129,9 @@ struct xrdp_client_info
   char certificate[1024];
   char key_file[1024];
 
+  int use_osirium_preamble;
+  char *osirium_preamble_buffer;
+
   /* X11 keyboard layout - inferred from keyboard type/subtype */
   char model[16];
   char layout[16];

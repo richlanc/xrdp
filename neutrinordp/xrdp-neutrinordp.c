@@ -169,7 +169,7 @@ lxrdp_connect(struct mod *mod)
                 }
             }
 
-            log_message(LOG_LEVEL_INFO, buf);
+            log_message(LOG_LEVEL_INFO, "%s", buf);
             mod->server_msg(mod, buf, 0);
         }
 

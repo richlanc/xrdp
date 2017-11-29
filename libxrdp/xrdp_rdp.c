@@ -245,6 +245,10 @@ xrdp_rdp_read_config(struct xrdp_client_info *client_info)
                             client_info->certificate, g_get_strerror());
             }
         }
+        else if (g_strcasecmp(item, "osirium_preamble") == 0)
+        {
+            client_info->use_osirium_preamble = g_text2bool(value);
+        }
         else if (g_strcasecmp(item, "key_file") == 0)
         {
             g_memset(client_info->key_file, 0, sizeof(char) * 1024);
@@ -1326,7 +1330,7 @@ xrdp_rdp_send_session_info(struct xrdp_rdp *self, const char *data,
 
     if (s_check_rem_out(s, data_bytes))
     {
-        out_uint8a(s, data, data_bytes); 
+        out_uint8a(s, data, data_bytes);
     }
     else
     {
