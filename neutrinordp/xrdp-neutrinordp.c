@@ -1521,10 +1521,18 @@ lfreerdp_pre_connect(freerdp *instance)
                 PERF_DISABLE_THEMING | PERF_ENABLE_FONT_SMOOTHING;
                 // | PERF_DISABLE_CURSOR_SHADOW | PERF_DISABLE_CURSORSETTINGS;
     }
-
+  
     instance->settings->kbd_layout = mod->client_info.keylayout;
     instance->settings->kbd_type = mod->client_info.keyboard_type;
     instance->settings->kbd_subtype = mod->client_info.keyboard_subtype;
+
+    /* client time zone */
+    g_memcpy(instance->settings->client_time_zone, &mod->client_info.timezone_info,
+             sizeof(*instance->settings->client_time_zone));
+#ifdef XRDP_DEBUG
+    g_writeln("timezone info:");
+    g_hexdump(instance->settings->client_time_zone, sizeof(*instance->settings->client_time_zone));	
+#endif
 
     instance->settings->compression = 0;
     instance->settings->ignore_certificate = 1;
