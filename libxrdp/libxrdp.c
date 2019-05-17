@@ -21,7 +21,12 @@
 #include "libxrdp.h"
 #include "xrdp_orders_rail.h"
 
+#ifdef XRDP_DEBUG
+#define LOG_LEVEL 99
+#else
 #define LOG_LEVEL 1
+#endif
+
 #define LLOG(_level, _args) \
     do { if (_level < LOG_LEVEL) { g_write _args ; } } while (0)
 #define LLOGLN(_level, _args) \
@@ -611,7 +616,10 @@ libxrdp_send_pointer_ex(struct xrdp_session *session, int cache_idx,
     init_stream(s, 8192);
 
     data_bytes = width * height * ((bpp + 7) / 8);
-    mask_bytes = width * height / 8;
+    /* 1 bpp, each scanline is padded up to a 2 byte boundary */
+    mask_bytes = ((7 + width) / 8);
+    mask_bytes = ((1 + mask_bytes) / 2) * 2;
+    mask_bytes = mask_bytes * height;
 
     if (session->client_info->use_fast_path & 1) /* fastpath output supported */
     {
