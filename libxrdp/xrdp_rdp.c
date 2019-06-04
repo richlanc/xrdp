@@ -26,7 +26,12 @@
 #include <freerdp/constants.h>
 #endif
 
+#ifdef XRDP_DEBUG
+#define LOG_LEVEL 99
+#else
 #define LOG_LEVEL 1
+#endif
+
 #define LLOG(_level, _args) \
     do { if (_level < LOG_LEVEL) { g_write _args ; } } while (0)
 #define LLOGLN(_level, _args) \

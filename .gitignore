@@ -39,3 +39,4 @@ sesman/tools/xrdp-xcon
 sesman/xrdp-sesman
 stamp-h1
 xrdp/xrdp
+.vscode/*
