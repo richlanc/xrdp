@@ -22,7 +22,7 @@
 #include "log.h"
 #include "trans.h"
 
-#define LOG_LEVEL 1
+#define LOG_LEVEL 99
 #define LLOG(_level, _args) \
     do { if (_level < LOG_LEVEL) { g_write _args ; } } while (0)
 #define LLOGLN(_level, _args) \
