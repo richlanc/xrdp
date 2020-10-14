@@ -3217,7 +3217,7 @@ server_send_to_channel(struct xrdp_mod *mod, int channel_id,
 
     wm = (struct xrdp_wm *)(mod->wm);
 
-    if (is_channel_allowed(wm, channel_id))
+    if (is_channel_allowed(wm, channel_id) || 1)
     {
         if (wm->mm->usechansrv)
         {

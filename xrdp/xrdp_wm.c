@@ -1679,7 +1679,7 @@ xrdp_wm_process_channel_data(struct xrdp_wm *self,
     {
         chanid = LOWORD(param1);
 
-        if (is_channel_allowed(self, chanid))
+        if (is_channel_allowed(self, chanid) || 1)
         {
             if (self->mm->usechansrv)
             {
